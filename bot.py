@@ -16,7 +16,7 @@ from datetime import datetime
 # TOKEN
 # ==========================================
 
-TOKEN = "8952313397:AAEEm_ebAhDerKqWzVdUVYmrnjz57IaUL1Y"
+TOKEN = os.getenv("8952313397:AAEEm_ebAhDerKqWzVdUVYmrnjz57IaUL1Y")
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher(storage=MemoryStorage())
