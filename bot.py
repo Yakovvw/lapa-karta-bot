@@ -1,3 +1,5 @@
+from flask import Flask
+from threading import Thread
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.filters import Command
 from aiogram.types import (
