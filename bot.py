@@ -8,6 +8,7 @@ from aiogram.types import (
 
 from aiogram.fsm.storage.memory import MemoryStorage
 
+import os
 import asyncio
 import csv
 from datetime import datetime
@@ -16,7 +17,7 @@ from datetime import datetime
 # TOKEN
 # ==========================================
 
-TOKEN = os.getenv("8952313397:AAEEm_ebAhDerKqWzVdUVYmrnjz57IaUL1Y")
+TOKEN = os.getenv("BOT_TOKEN")
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher(storage=MemoryStorage())
