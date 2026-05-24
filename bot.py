@@ -331,32 +331,12 @@ def generate_map():
 
     import pandas as pd
 
-    try:
+    df = pd.read_csv("reports.csv")
 
-        df = pd.read_csv(
-            "reports.csv",
-            names=[
-                "time",
-                "lat",
-                "lon",
-                "dogs",
-                "aggression",
-                "comment",
-                "photo"
-            ]
-        )
+    df["lat"] = pd.to_numeric(df["lat"], errors="coerce")
+    df["lon"] = pd.to_numeric(df["lon"], errors="coerce")
 
-        # Преобразуем координаты
-        df["lat"] = pd.to_numeric(df["lat"], errors="coerce")
-        df["lon"] = pd.to_numeric(df["lon"], errors="coerce")
-
-        # Удаляем битые строки
-        df = df.dropna(subset=["lat", "lon"])
-
-    except Exception as e:
-
-        print("Ошибка CSV:", e)
-        return
+    df = df.dropna(subset=["lat", "lon"])
 
     markers_js = ""
 
@@ -369,7 +349,9 @@ def generate_map():
 
         markers_js += f"""
 L.circleMarker([{row['lat']}, {row['lon']}], {{
-    radius: 8,
+    radius: 16,
+    weight: 3,
+    fillOpacity: 0.9,
     color: '{color}'
 }}).addTo(map)
 .bindPopup(`
