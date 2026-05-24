@@ -18,7 +18,7 @@ from aiogram.types import (
 
 import folium
 import pandas as pd
-
+import subprocess
 
 # =========================
 # TOKEN
@@ -271,8 +271,9 @@ async def comment_handler(message: types.Message, state: FSMContext):
 
     generate_map()
 
-    await state.clear()
+    upload_to_github()
 
+    await state.clear()
     await message.answer(
         "✅ Сообщение успешно сохранено!\n\n"
         "Спасибо за помощь проекту 🐾",
@@ -288,7 +289,7 @@ async def map_handler(message: types.Message, state: FSMContext):
     await state.clear()
 
     web_app = WebAppInfo(
-        url="https://Yakovvw.github.io/dog-map/"
+        url="https://Yakovvw.github.io/lapa-karta-bot/"
     )
 
     keyboard = ReplyKeyboardMarkup(
@@ -432,6 +433,31 @@ L.tileLayer(
 
     with open("index.html", "w", encoding="utf-8") as file:
         file.write(html)
+
+def upload_to_github():
+
+    try:
+
+        subprocess.run(
+            ["git", "add", "."],
+            check=True
+        )
+
+        subprocess.run(
+            ["git", "commit", "-m", "update map"],
+            check=True
+        )
+
+        subprocess.run(
+            ["git", "push"],
+            check=True
+        )
+
+        print("GitHub updated!")
+
+    except Exception as e:
+
+        print("GitHub error:", e)
 # =========================
 # RUN
 # =========================
