@@ -1,102 +1,122 @@
-from flask import Flask
-from threading import Thread
-from aiogram import Bot, Dispatcher, types, F
-from aiogram.filters import Command
+import asyncio
+import csv
+from aiogram.filters import StateFilter
+from datetime import datetime
+from aiogram.types import WebAppInfo
+from aiogram import Bot, Dispatcher, F, types
+from aiogram.filters import Command, StateFilter
+from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import State, StatesGroup
+from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.types import (
     ReplyKeyboardMarkup,
     KeyboardButton,
-    ReplyKeyboardRemove
+    ReplyKeyboardRemove,
+    WebAppInfo,
+    FSInputFile
 )
 
-from aiogram.fsm.storage.memory import MemoryStorage
+import folium
+import pandas as pd
 
-import os
-import asyncio
-import csv
-from datetime import datetime
 
-# ==========================================
+# =========================
 # TOKEN
-# ==========================================
-
-TOKEN = os.getenv("BOT_TOKEN")
+# =========================
+TOKEN = "8952313397:AAEEm_ebAhDerKqWzVdUVYmrnjz57IaUL1Y"
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher(storage=MemoryStorage())
 
-# ==========================================
-# КРАСИВЫЕ КНОПКИ
-# ==========================================
 
+# =========================
+# FSM STATES
+# =========================
+class Report(StatesGroup):
+    location = State()
+    photo = State()
+    dogs_count = State()
+    aggression = State()
+    comment = State()
+
+# =========================
+# KEYBOARDS
+# =========================
 main_keyboard = ReplyKeyboardMarkup(
     keyboard=[
-        [
-            KeyboardButton(text="🐕 Сообщить о стае")
-        ],
-        [
-            KeyboardButton(text="🗺 Карта"),
-            KeyboardButton(text="ℹ️ Помощь")
-        ]
+        [KeyboardButton(text="🐕 Сообщить о стае")],
+        [KeyboardButton(text="🗺 Карта"), KeyboardButton(text="ℹ️ Помощь")]
     ],
     resize_keyboard=True
 )
 
 location_keyboard = ReplyKeyboardMarkup(
     keyboard=[
-        [
-            KeyboardButton(
-                text="📍 Отправить геолокацию",
-                request_location=True
-            )
-        ]
+        [KeyboardButton(text="📍 Отправить геолокацию", request_location=True)]
     ],
     resize_keyboard=True
 )
 
-# ==========================================
-# ХРАНЕНИЕ ДАННЫХ
-# ==========================================
+aggression_keyboard = ReplyKeyboardMarkup(
+    keyboard=[
+        [KeyboardButton(text="Да"), KeyboardButton(text="Нет")]
+    ],
+    resize_keyboard=True
+)
 
-user_data = {}
 
-# ==========================================
+# =========================
 # START
-# ==========================================
-
+# =========================
 @dp.message(Command("start"))
-async def start_handler(message: types.Message):
+async def start(message: types.Message, state: FSMContext):
 
-    text = (
-        "🐾 <b>Лапа Карта</b>\n\n"
-        "Помогите сделать город безопаснее для людей и животных.\n\n"
-        "Через этого бота можно:\n"
-        "• сообщить о стае собак\n"
-        "• отметить опасную зону\n"
-        "• помочь волонтёрам быстрее реагировать\n\n"
-        "👇 Выберите действие:"
-    )
+    await state.clear()
 
     await message.answer(
-        text,
-        parse_mode="HTML",
+        "🐾 Лапа Карта",
         reply_markup=main_keyboard
-    )
+)
 
-# ==========================================
-# ПОМОЩЬ
-# ==========================================
-
+# =========================
+# HELP
+# =========================
 @dp.message(F.text == "ℹ️ Помощь")
 async def help_handler(message: types.Message):
 
     text = (
-        "ℹ️ <b>Как пользоваться ботом</b>\n\n"
-        "1️⃣ Нажмите «Сообщить о стае»\n"
-        "2️⃣ Отправьте геолокацию\n"
-        "3️⃣ Прикрепите фото\n"
-        "4️⃣ Укажите количество собак\n"
-        "5️⃣ Опишите ситуацию\n\n"
-        "Спасибо за помощь 🐾"
+        "🐾 <b>Помощь — Лапа Карта</b>\n\n"
+
+        "Этот бот помогает отмечать места,\n"
+        "где были замечены бездомные собаки.\n\n"
+
+        "📌 <b>Как отправить сообщение:</b>\n\n"
+
+        "1️⃣ Нажмите «🐕 Сообщить о стае»\n\n"
+
+        "2️⃣ Отправьте геолокацию места\n\n"
+
+        "3️⃣ Прикрепите фото собак\n\n"
+
+        "4️⃣ Укажите количество собак\n\n"
+
+        "5️⃣ Выберите:\n"
+        "• Есть агрессия\n"
+        "• Нет агрессии\n\n"
+
+        "6️⃣ Напишите комментарий\n"
+        "(например: возле школы,\n"
+        "у гаражей, есть щенки и т.д.)\n\n"
+
+        "🗺 <b>Карта</b>\n"
+        "Во вкладке «Карта» можно посмотреть\n"
+        "все отмеченные места.\n\n"
+
+        "⚠️ <b>Важно:</b>\n"
+        "Не отправляйте фейковые сообщения.\n"
+        "Это мешает волонтёрам и другим людям.\n\n"
+
+        "❤️ Спасибо за помощь проекту!"
     )
 
     await message.answer(
@@ -104,26 +124,216 @@ async def help_handler(message: types.Message):
         parse_mode="HTML"
     )
 
-# ==========================================
-# КАРТА
-# ==========================================
+# =========================
+# START REPORT
+# =========================
+@dp.message(F.text == "🐕 Сообщить о стае")
+async def report_handler(message: types.Message, state: FSMContext):
 
+    await state.clear()
+
+    await state.set_state(Report.location)
+
+    await message.answer(
+        "📍 Отправьте геолокацию стаи:",
+        reply_markup=location_keyboard
+    )
+# =========================
+# LOCATION
+# =========================
+@dp.message(StateFilter(Report.location), F.location)
+async def location_handler(message: types.Message, state: FSMContext):
+
+    await state.update_data(
+        latitude=message.location.latitude,
+        longitude=message.location.longitude
+    )
+
+    await state.set_state(Report.photo)
+
+    await message.answer(
+        "📸 Теперь отправьте фото собак.",
+        reply_markup=ReplyKeyboardRemove()
+    )
+# =========================
+# PHOTO
+# =========================
+@dp.message(StateFilter(Report.photo), F.photo)
+async def photo_handler(message: types.Message, state: FSMContext):
+
+    photo_id = message.photo[-1].file_id
+
+    await state.update_data(photo=photo_id)
+
+    await state.set_state(Report.dogs_count)
+
+    await message.answer(
+        "🐕 Сколько собак вы увидели?"
+    )
+# =========================
+# DOG COUNT
+# =========================
+@dp.message(StateFilter(Report.dogs_count))
+async def dogs_count_handler(message: types.Message, state: FSMContext):
+
+    if not message.text:
+
+        await message.answer(
+            "Введите число собак."
+        )
+        return
+
+    if not message.text.isdigit():
+
+        await message.answer(
+            "Введите число собак цифрами."
+        )
+        return
+
+    await state.update_data(
+        dogs_count=message.text
+    )
+
+    await state.set_state(Report.aggression)
+
+    await message.answer(
+        "⚠️ Есть ли агрессия?",
+        reply_markup=aggression_keyboard
+    )
+# =========================
+# AGGRESSION
+# =========================
+@dp.message(StateFilter(Report.aggression))
+async def get_aggression(message: types.Message, state: FSMContext):
+
+    if not message.text:
+
+        await message.answer(
+            "Нажмите кнопку Да или Нет"
+        )
+        return
+
+    text = message.text.lower()
+
+    if text not in ["да", "нет"]:
+
+        await message.answer(
+            "Выберите кнопку Да или Нет"
+        )
+        return
+
+    await state.update_data(
+        aggression=text
+    )
+
+    await state.set_state(Report.comment)
+
+    await message.answer(
+        "✍️ Напишите комментарий:",
+        reply_markup=ReplyKeyboardRemove()
+    )
+# =========================
+# COMMENT + SAVE
+# =========================
+@dp.message(StateFilter(Report.comment))
+async def comment_handler(message: types.Message, state: FSMContext):
+
+    if not message.text:
+
+        await message.answer(
+            "Напишите комментарий текстом."
+        )
+        return
+
+    data = await state.get_data()
+
+    data["comment"] = message.text
+    data["time"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    with open(
+        "reports.csv",
+        "a",
+        newline="",
+        encoding="utf-8"
+    ) as file:
+
+        writer = csv.writer(file)
+
+        writer.writerow([
+            data["time"],
+            data["latitude"],
+            data["longitude"],
+            data["dogs_count"],
+            data["aggression"],
+            data["comment"],
+            data["photo"]
+        ])
+
+    generate_map()
+
+    await state.clear()
+
+    await message.answer(
+        "✅ Сообщение успешно сохранено!\n\n"
+        "Спасибо за помощь проекту 🐾",
+        reply_markup=main_keyboard
+    )
+
+# =========================
+# MAP
+# =========================
 @dp.message(F.text == "🗺 Карта")
-async def map_handler(message: types.Message):
+async def map_handler(message: types.Message, state: FSMContext):
+
+    await state.clear()
+
+    web_app = WebAppInfo(
+        url="https://Yakovvw.github.io/dog-map/"
+    )
+
+    keyboard = ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(
+                    text="🗺 Открыть карту",
+                    web_app=web_app
+                )
+            ],
+            [
+                KeyboardButton(text="⬅️ Назад")
+            ]
+        ],
+        resize_keyboard=True
+    )
+
+    await message.answer(
+        "🗺 Нажмите кнопку ниже:",
+        reply_markup=keyboard
+    )
+
+
+@dp.message(F.text == "⬅️ Назад")
+async def back_handler(message: types.Message, state: FSMContext):
+
+    await state.clear()
+
+    await message.answer(
+        "Главное меню:",
+        reply_markup=main_keyboard
+    )
+
+
+# =========================
+# RUN
+# =========================
+def generate_map():
+
+    import pandas as pd
 
     try:
 
-        import pandas as pd
-        import folium
-        from aiogram.types import FSInputFile
-
-        # ==========================================
-        # ЧИТАЕМ CSV
-        # ==========================================
-
         df = pd.read_csv(
             "reports.csv",
-            header=None,
             names=[
                 "time",
                 "lat",
@@ -135,269 +345,109 @@ async def map_handler(message: types.Message):
             ]
         )
 
-        # ==========================================
-        # ОБРАБОТКА КООРДИНАТ
-        # ==========================================
+        # Преобразуем координаты
+        df["lat"] = pd.to_numeric(df["lat"], errors="coerce")
+        df["lon"] = pd.to_numeric(df["lon"], errors="coerce")
 
-        df["lat"] = pd.to_numeric(
-            df["lat"],
-            errors="coerce"
-        )
-
-        df["lon"] = pd.to_numeric(
-            df["lon"],
-            errors="coerce"
-        )
-
+        # Удаляем битые строки
         df = df.dropna(subset=["lat", "lon"])
 
-        # ==========================================
-        # КАРТА ТЮМЕНИ
-        # ==========================================
-
-        m = folium.Map(
-            location=[57.1522, 65.5272],
-            zoom_start=12
-        )
-
-        # ==========================================
-        # ДОБАВЛЯЕМ ТОЧКИ
-        # ==========================================
-
-        for _, row in df.iterrows():
-
-            color = "red"
-
-            if str(row["aggression"]).lower() == "нет":
-                color = "green"
-
-            popup_text = f"""
-            Время: {row['time']}
-            
-            Собак: {row['dogs']}
-            
-            Агрессия: {row['aggression']}
-            
-            Комментарий: {row['comment']}
-            """
-
-            folium.Marker(
-                location=[
-                    row["lat"],
-                    row["lon"]
-                ],
-                popup=popup_text,
-                tooltip="🐾 Лапа Карта",
-                icon=folium.Icon(color=color)
-            ).add_to(m)
-
-        # ==========================================
-        # СОХРАНЯЕМ HTML
-        # ==========================================
-
-        m.save("map.html")
-
-        # ==========================================
-        # ОТПРАВЛЯЕМ ФАЙЛ
-        # ==========================================
-
-        file = FSInputFile("map.html")
-
-        await message.answer_document(
-            file,
-            caption="🗺 Карта наблюдений"
-        )
-
     except Exception as e:
 
-        print(e)
+        print("Ошибка CSV:", e)
+        return
 
-        await message.answer(
-            f"❌ Ошибка карты:\n{e}"
-        )
+    markers_js = ""
 
-# ==========================================
-# СООБЩИТЬ О СТАЕ
-# ==========================================
+    for _, row in df.iterrows():
 
-@dp.message(F.text == "🐕 Сообщить о стае")
-async def report_handler(message: types.Message):
+        color = "red"
 
-    user_data[message.from_user.id] = {}
+        if str(row["aggression"]).lower() == "нет":
+            color = "green"
 
-    await message.answer(
-        "📍 Отправьте геолокацию стаи:",
-        reply_markup=location_keyboard
-    )
+        markers_js += f"""
+L.circleMarker([{row['lat']}, {row['lon']}], {{
+    radius: 8,
+    color: '{color}'
+}}).addTo(map)
+.bindPopup(`
+🐕 Собак: {row['dogs']}<br>
+⚠️ Агрессия: {row['aggression']}<br>
+📝 {row['comment']}
+`);
+"""
 
-# ==========================================
-# ГЕОЛОКАЦИЯ
-# ==========================================
+    html = f"""
+<!DOCTYPE html>
+<html>
+<head>
 
-@dp.message(F.location)
-async def location_handler(message: types.Message):
+<meta charset="utf-8">
 
-    user_id = message.from_user.id
+<title>Лапа Карта</title>
 
-    user_data[user_id]["latitude"] = message.location.latitude
-    user_data[user_id]["longitude"] = message.location.longitude
+<link
+rel="stylesheet"
+href="https://unpkg.com/leaflet/dist/leaflet.css"
+/>
 
-    await message.answer(
-        "📸 Теперь отправьте фото собак.",
-        reply_markup=ReplyKeyboardRemove()
-    )
+<style>
 
-# ==========================================
-# ФОТО
-# ==========================================
+body {{
+    margin: 0;
+}}
 
-@dp.message(F.photo)
-async def photo_handler(message: types.Message):
+#map {{
+    height: 100vh;
+}}
 
-    user_id = message.from_user.id
+</style>
 
-    photo_id = message.photo[-1].file_id
+</head>
+<body>
 
-    user_data[user_id]["photo"] = photo_id
+<div id="map"></div>
 
-    await message.answer(
-        "🐕 Сколько собак вы увидели?"
-    )
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
-# ==========================================
-# КОЛИЧЕСТВО СОБАК
-# ==========================================
+<script>
 
-@dp.message(F.text.regexp(r'^\d+$'))
-async def dogs_count_handler(message: types.Message):
+const map = L.map('map').setView([57.1522, 65.5272], 12);
 
-    user_id = message.from_user.id
+L.tileLayer(
+'https://{{s}}.tile.openstreetmap.org/{{z}}/{{x}}/{{y}}.png',
+{{
+    maxZoom: 19
+}}
+).addTo(map);
 
-    if "dogs_count" not in user_data[user_id]:
+{markers_js}
 
-        user_data[user_id]["dogs_count"] = message.text
+</script>
 
-        await message.answer(
-            "⚠️ Есть ли агрессия?\n\n"
-            "Напишите:\n"
-            "Да / Нет"
-        )
+</body>
+</html>
+"""
 
-# ==========================================
-# АГРЕССИЯ
-# ==========================================
-
-@dp.message(F.text.lower().in_(["да", "нет"]))
-async def aggression_handler(message: types.Message):
-
-    user_id = message.from_user.id
-
-    if "aggression" not in user_data[user_id]:
-
-        user_data[user_id]["aggression"] = message.text
-
-        await message.answer(
-            "✍️ Добавьте комментарий:\n\n"
-            "Например:\n"
-            "• возле школы\n"
-            "• бегают за людьми\n"
-            "• есть щенки"
-        )
-
-# ==========================================
-# КОММЕНТАРИЙ + СОХРАНЕНИЕ
-# ==========================================
-
-@dp.message(F.text)
-async def comment_handler(message: types.Message):
-
-    try:
-
-        user_id = message.from_user.id
-
-        if user_id not in user_data:
-            return
-
-        data = user_data[user_id]
-
-        # Проверяем все поля
-        required_fields = [
-            "latitude",
-            "longitude",
-            "photo",
-            "dogs_count",
-            "aggression"
-        ]
-
-        for field in required_fields:
-
-            if field not in data:
-                await message.answer(
-                    f"❌ Ошибка: отсутствует поле {field}"
-                )
-                return
-
-        # Сохраняем комментарий
-        data["comment"] = message.text
-
-        # Время
-        data["time"] = datetime.now().strftime(
-            "%Y-%m-%d %H:%M:%S"
-        )
-
-        # ==========================================
-        # СОХРАНЕНИЕ CSV
-        # ==========================================
-
-        with open(
-            "reports.csv",
-            "a",
-            newline="",
-            encoding="utf-8"
-        ) as file:
-
-            writer = csv.writer(file)
-
-            writer.writerow([
-                data["time"],
-                data["latitude"],
-                data["longitude"],
-                data["dogs_count"],
-                data["aggression"],
-                data["comment"],
-                data["photo"]
-            ])
-
-        # ==========================================
-        # УСПЕШНОЕ СООБЩЕНИЕ
-        # ==========================================
-
-        await message.answer(
-            "✅ Сообщение успешно сохранено!\n\n"
-            "Спасибо за помощь проекту «Лапа Карта» 🐾",
-            reply_markup=main_keyboard
-        )
-
-        # Очищаем данные
-        del user_data[user_id]
-
-    except Exception as e:
-
-        print("ОШИБКА:", e)
-
-        await message.answer(
-            f"❌ Произошла ошибка:\n{e}"
-        )
-
-# ==========================================
-# ЗАПУСК
-# ==========================================
-
+    with open("index.html", "w", encoding="utf-8") as file:
+        file.write(html)
+# =========================
+# RUN
+# =========================
 async def main():
 
-    print("🐾 Бот запущен...")
+    await bot.delete_webhook(
+        drop_pending_updates=True
+    )
 
-    await dp.start_polling(bot)
+    print("Bot started...")
+
+    await dp.start_polling(
+    bot,
+    polling_timeout=30
+    )
+
 
 if __name__ == "__main__":
     asyncio.run(main())
