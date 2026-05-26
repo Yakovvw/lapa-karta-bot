@@ -392,14 +392,81 @@ async def back_handler(message: types.Message, state: FSMContext):
 def generate_map():
 
     import pandas as pd
+    import os
 
     try:
 
+        # Если файла нет — создаём пустую карту
+        if not os.path.exists("reports.csv"):
+
+            with open("reports.csv", "w", encoding="utf-8") as file:
+                pass
+
+        # Если CSV пустой
+        if os.path.getsize("reports.csv") == 0:
+
+            html = """
+<!DOCTYPE html>
+<html>
+<head>
+
+<meta charset="utf-8">
+
+<title>Лапа Карта</title>
+
+<link
+rel="stylesheet"
+href="https://unpkg.com/leaflet/dist/leaflet.css"
+/>
+
+<style>
+
+body {
+    margin: 0;
+}
+
+#map {
+    height: 100vh;
+}
+
+</style>
+
+</head>
+<body>
+
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<script>
+
+const map = L.map('map').setView([57.1522, 65.5272], 12);
+
+L.tileLayer(
+'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+{
+    maxZoom: 19
+}
+).addTo(map);
+
+</script>
+
+</body>
+</html>
+"""
+
+            with open("index.html", "w", encoding="utf-8") as file:
+                file.write(html)
+
+            return
+
+        # Читаем CSV
         df = pd.read_csv(
             "reports.csv",
             header=None
         )
 
+        # Названия колонок
         df.columns = [
             "time",
             "lat",
@@ -410,10 +477,21 @@ def generate_map():
             "photo"
         ]
 
-        df["lat"] = pd.to_numeric(df["lat"], errors="coerce")
-        df["lon"] = pd.to_numeric(df["lon"], errors="coerce")
+        # Координаты
+        df["lat"] = pd.to_numeric(
+            df["lat"],
+            errors="coerce"
+        )
 
-        df = df.dropna(subset=["lat", "lon"])
+        df["lon"] = pd.to_numeric(
+            df["lon"],
+            errors="coerce"
+        )
+
+        # Удаляем битые строки
+        df = df.dropna(
+            subset=["lat", "lon"]
+        )
 
     except Exception as e:
 
@@ -497,7 +575,6 @@ L.tileLayer(
 
     with open("index.html", "w", encoding="utf-8") as file:
         file.write(html)
-
 def upload_to_github():
 
     try:
