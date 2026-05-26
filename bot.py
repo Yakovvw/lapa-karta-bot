@@ -313,38 +313,52 @@ async def get_aggression(message: types.Message, state: FSMContext):
 # =========================
 # COMMENT + SAVE
 # =========================
-@dp.message(Report.comment, F.text)
+@dp.message(Report.comment)
 async def comment_handler(message: types.Message, state: FSMContext):
-
-    if not message.text:
-        await message.answer("Напишите комментарий текстом.")
-        return
 
     print("COMMENT TRIGGERED")
 
     data = await state.get_data()
 
-    data["comment"] = message.text
+    comment = message.text
+
+    data["comment"] = comment
     data["time"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    with open("reports.csv", "a", newline="", encoding="utf-8") as file:
+    # ===== СОХРАНЕНИЕ CSV =====
+    with open(
+        "reports.csv",
+        "a",
+        newline="",
+        encoding="utf-8"
+    ) as file:
+
         writer = csv.writer(file)
+
         writer.writerow([
-            data["time"],
-            data["latitude"],
-            data["longitude"],
-            data["dogs_count"],
-            data["aggression"],
-            data["comment"],
-            data["photo"]
+            data.get("time", ""),
+            data.get("latitude", ""),
+            data.get("longitude", ""),
+            data.get("dogs_count", ""),
+            data.get("aggression", ""),
+            data.get("comment", ""),
+            data.get("photo", "")
         ])
 
+    print("CSV SAVED")
+
+    # 🗺 обновляем карту
     generate_map()
 
+    # ☁️ загружаем на GitHub
+    upload_to_github()
+
+    # 🧹 очищаем состояние
     await state.clear()
 
     await message.answer(
-        "✅ Сообщение сохранено!\nСпасибо 🐾",
+        "✅ Сообщение успешно сохранено!\n\n"
+        "Спасибо за помощь проекту 🐾",
         reply_markup=main_keyboard
     )
 
