@@ -631,21 +631,9 @@ def upload_to_github():
             check=True
         )
 
-        result = subprocess.run(
-            ["git", "status", "--porcelain"],
-            capture_output=True,
-            text=True
-        )
-
-        # Если изменений нет
-        if not result.stdout.strip():
-
-            print("No changes for GitHub")
-            return
-
         subprocess.run(
             ["git", "commit", "-m", "update map"],
-            check=True
+            check=False
         )
 
         subprocess.run(
