@@ -347,6 +347,9 @@ async def comment_handler(message: types.Message, state: FSMContext):
 
     print("CSV SAVED")
 
+    import os
+    print(os.path.abspath("reports.csv"))
+
     # 🗺 обновляем карту
     generate_map()
 
