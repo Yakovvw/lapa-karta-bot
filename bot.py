@@ -27,7 +27,7 @@ TOKEN = "8952313397:AAEEm_ebAhDerKqWzVdUVYmrnjz57IaUL1Y"
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher(storage=MemoryStorage())
-
+ADMIN_ID = 7676272253  # <-- вставь свой Telegram ID
 
 # =========================
 # FSM STATES
@@ -64,6 +64,15 @@ aggression_keyboard = ReplyKeyboardMarkup(
     resize_keyboard=True
 )
 
+admin_keyboard = ReplyKeyboardMarkup(
+    keyboard=[
+        [KeyboardButton(text="📊 Все отчёты")],
+        [KeyboardButton(text="🗑 Очистить данные")],
+        [KeyboardButton(text="🗺 Обновить карту")],
+        [KeyboardButton(text="⬅️ Выйти")]
+    ],
+    resize_keyboard=True
+)
 
 # =========================
 # START
@@ -77,7 +86,70 @@ async def start(message: types.Message, state: FSMContext):
         "🐾 Лапа Карта",
         reply_markup=main_keyboard
 )
+# =========================
+# ADMINE
+# =========================
+@dp.message(Command("admin"))
+async def admin_panel(message: types.Message):
 
+    if message.from_user.id != ADMIN_ID:
+        await message.answer("⛔ Нет доступа")
+        return
+
+    await message.answer(
+        "🛠 Админ-панель",
+        reply_markup=admin_keyboard
+    )
+@dp.message(F.text == "📊 Все отчёты")
+async def all_reports(message: types.Message):
+
+    if message.from_user.id != ADMIN_ID:
+        return
+
+    try:
+        with open("reports.csv", "r", encoding="utf-8") as f:
+            data = f.read()
+
+        if not data:
+            await message.answer("Нет данных")
+            return
+
+        await message.answer(f"<pre>{data}</pre>", parse_mode="HTML")
+
+    except Exception as e:
+        await message.answer(f"Ошибка: {e}")
+
+@dp.message(F.text == "🗑 Очистить данные")
+async def clear_data(message: types.Message):
+
+    if message.from_user.id != ADMIN_ID:
+        return
+
+    open("reports.csv", "w").close()
+
+    generate_map()
+    upload_to_github()
+
+    await message.answer("🗑 Все данные удалены")
+
+@dp.message(F.text == "🗺 Обновить карту")
+async def refresh_map(message: types.Message):
+
+    if message.from_user.id != ADMIN_ID:
+        return
+
+    generate_map()
+    upload_to_github()
+
+    await message.answer("🗺 Карта обновлена")
+
+@dp.message(F.text == "⬅️ Выйти")
+async def exit_admin(message: types.Message):
+
+    await message.answer(
+        "Главное меню",
+        reply_markup=main_keyboard
+    )
 # =========================
 # HELP
 # =========================
@@ -235,30 +307,22 @@ async def get_aggression(message: types.Message, state: FSMContext):
 # =========================
 # COMMENT + SAVE
 # =========================
-@dp.message(StateFilter(Report.comment))
+@dp.message(Report.comment, F.text)
 async def comment_handler(message: types.Message, state: FSMContext):
 
     if not message.text:
-
-        await message.answer(
-            "Напишите комментарий текстом."
-        )
+        await message.answer("Напишите комментарий текстом.")
         return
+
+    print("COMMENT TRIGGERED")
 
     data = await state.get_data()
 
     data["comment"] = message.text
     data["time"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    with open(
-        "reports.csv",
-        "a",
-        newline="",
-        encoding="utf-8"
-    ) as file:
-
+    with open("reports.csv", "a", newline="", encoding="utf-8") as file:
         writer = csv.writer(file)
-
         writer.writerow([
             data["time"],
             data["latitude"],
@@ -271,12 +335,10 @@ async def comment_handler(message: types.Message, state: FSMContext):
 
     generate_map()
 
-    upload_to_github()
-
     await state.clear()
+
     await message.answer(
-        "✅ Сообщение успешно сохранено!\n\n"
-        "Спасибо за помощь проекту 🐾",
+        "✅ Сообщение сохранено!\nСпасибо 🐾",
         reply_markup=main_keyboard
     )
 
@@ -331,12 +393,32 @@ def generate_map():
 
     import pandas as pd
 
-    df = pd.read_csv("reports.csv")
+    try:
 
-    df["lat"] = pd.to_numeric(df["lat"], errors="coerce")
-    df["lon"] = pd.to_numeric(df["lon"], errors="coerce")
+        df = pd.read_csv(
+            "reports.csv",
+            header=None
+        )
 
-    df = df.dropna(subset=["lat", "lon"])
+        df.columns = [
+            "time",
+            "lat",
+            "lon",
+            "dogs",
+            "aggression",
+            "comment",
+            "photo"
+        ]
+
+        df["lat"] = pd.to_numeric(df["lat"], errors="coerce")
+        df["lon"] = pd.to_numeric(df["lon"], errors="coerce")
+
+        df = df.dropna(subset=["lat", "lon"])
+
+    except Exception as e:
+
+        print("Ошибка CSV:", e)
+        return
 
     markers_js = ""
 
@@ -444,17 +526,8 @@ def upload_to_github():
 # RUN
 # =========================
 async def main():
-
-    await bot.delete_webhook(
-        drop_pending_updates=True
-    )
-
     print("Bot started...")
-
-    await dp.start_polling(
-    bot,
-    polling_timeout=30
-    )
+    await dp.start_polling(bot)
 
 
 if __name__ == "__main__":
