@@ -361,7 +361,8 @@ async def comment_handler(message: types.Message, state: FSMContext):
 
     await message.answer(
         "✅ Сообщение успешно сохранено!\n\n"
-        "Спасибо за помощь проекту 🐾",
+        "Спасибо за помощь проекту 🐾"
+	"Чтобы сразу посмотреть данные на крате подождите 3-4 минуты",
         reply_markup=main_keyboard
     )
 
