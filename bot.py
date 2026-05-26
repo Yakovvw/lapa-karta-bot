@@ -531,17 +531,34 @@ L.tileLayer(
         if str(row["aggression"]).lower() == "нет":
             color = "green"
 
-        markers_js += f"""
+    markers_js += f"""
 L.circleMarker([{row['lat']}, {row['lon']}], {{
-    radius: 16,
+    radius: 14,
     weight: 3,
     fillOpacity: 0.9,
     color: '{color}'
 }}).addTo(map)
+
 .bindPopup(`
-🐕 Собак: {row['dogs']}<br>
-⚠️ Агрессия: {row['aggression']}<br>
-📝 {row['comment']}
+<div style="width:300px">
+
+<img 
+src="{row['photo']}"
+style="
+width:100%;
+border-radius:12px;
+margin-bottom:10px;
+"
+>
+
+<b>🐕 Собаки:</b> {row['dogs']}<br><br>
+
+<b>⚠️ Агрессия:</b> {row['aggression']}<br><br>
+
+<b>📝 Комментарий:</b><br>
+{row['comment']}
+
+</div>
 `);
 """
 
@@ -585,7 +602,7 @@ const map = L.map('map').setView([57.1522, 65.5272], 12);
 L.tileLayer(
 'https://{{s}}.tile.openstreetmap.org/{{z}}/{{x}}/{{y}}.png',
 {{
-    maxZoom: 19
+    maxZoom: 25
 }}
 ).addTo(map);
 

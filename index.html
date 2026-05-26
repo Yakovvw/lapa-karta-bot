@@ -38,69 +38,38 @@ const map = L.map('map').setView([57.1522, 65.5272], 12);
 L.tileLayer(
 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
 {
-    maxZoom: 19
+    maxZoom: 25
 }
 ).addTo(map);
 
 
-L.circleMarker([57.177313, 65.567942], {
-    radius: 16,
-    weight: 3,
-    fillOpacity: 0.9,
-    color: 'green'
-}).addTo(map)
-.bindPopup(`
-🐕 Собак: 1<br>
-⚠️ Агрессия: нет<br>
-📝 да
-`);
-
-L.circleMarker([57.177244, 65.568], {
-    radius: 16,
+L.circleMarker([57.177369, 65.567946], {
+    radius: 14,
     weight: 3,
     fillOpacity: 0.9,
     color: 'red'
 }).addTo(map)
-.bindPopup(`
-🐕 Собак: 1<br>
-⚠️ Агрессия: да<br>
-📝 очень злая собака
-`);
 
-L.circleMarker([57.177348, 65.567862], {
-    radius: 16,
-    weight: 3,
-    fillOpacity: 0.9,
-    color: 'red'
-}).addTo(map)
 .bindPopup(`
-🐕 Собак: 4<br>
-⚠️ Агрессия: да<br>
-📝 аааа помагите
-`);
+<div style="width:300px">
 
-L.circleMarker([57.177329, 65.567674], {
-    radius: 16,
-    weight: 3,
-    fillOpacity: 0.9,
-    color: 'green'
-}).addTo(map)
-.bindPopup(`
-🐕 Собак: 4<br>
-⚠️ Агрессия: нет<br>
-📝 J
-`);
+<img 
+src="AgACAgIAAxkBAAIGTmoVTMkx5w2RMo4pEG5tKj_e9A8UAAJLG2sbcquxSPbLCc71Y1PiAQADAgADeAADOwQ"
+style="
+width:100%;
+border-radius:12px;
+margin-bottom:10px;
+"
+>
 
-L.circleMarker([57.177361, 65.5678], {
-    radius: 16,
-    weight: 3,
-    fillOpacity: 0.9,
-    color: 'red'
-}).addTo(map)
-.bindPopup(`
-🐕 Собак: 98<br>
-⚠️ Агрессия: да<br>
-📝 tttg
+<b>🐕 Собаки:</b> 74<br><br>
+
+<b>⚠️ Агрессия:</b> да<br><br>
+
+<b>📝 Комментарий:</b><br>
+не надо
+
+</div>
 `);
 
 
