@@ -362,7 +362,7 @@ async def comment_handler(message: types.Message, state: FSMContext):
     await message.answer(
         "✅ Сообщение успешно сохранено!\n\n"
         "Спасибо за помощь проекту 🐾\n\n"
-	"Чтобы сразу посмотреть данные на крате подождите 3-4 минуты",
+	"Необходимо дождаться временной задержки в 3–4 минуты для корректного отображения данных на карте.",
         reply_markup=main_keyboard
     )
 
