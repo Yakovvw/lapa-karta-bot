@@ -128,9 +128,15 @@ async def clear_data(message: types.Message):
     open("reports.csv", "w").close()
 
     generate_map()
+
+    print("MAP GENERATED")
+
     upload_to_github()
 
-    await message.answer("🗑 Все данные удалены")
+    await message.answer(
+        "🗑 Все данные удалены",
+        reply_markup=main_keyboard
+    )
 
 @dp.message(F.text == "🗺 Обновить карту")
 async def refresh_map(message: types.Message):
