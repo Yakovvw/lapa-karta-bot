@@ -23,7 +23,7 @@ import subprocess
 # =========================
 # TOKEN
 # =========================
-TOKEN = "8952313397:AAEEm_ebAhDerKqWzVdUVYmrnjz57IaUL1Y"
+TOKEN = "8952313397:AAFDYG-U5_G67KzG3W_XTRbQoEFxX-0qmKI"
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher(storage=MemoryStorage())
