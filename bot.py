@@ -241,7 +241,11 @@ async def photo_handler(message: types.Message, state: FSMContext):
 
     photo_id = message.photo[-1].file_id
 
-    await state.update_data(photo=photo_id)
+    file = await bot.get_file(photo_id)
+
+    photo_url = f"https://api.telegram.org/file/bot{TOKEN}/{file.file_path}"
+
+    await state.update_data(photo=photo_url)
 
     await state.set_state(Report.dogs_count)
 
