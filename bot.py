@@ -597,12 +597,26 @@ L.tileLayer(
         file.write(html)
 def upload_to_github():
 
+    import subprocess
+
     try:
 
         subprocess.run(
             ["git", "add", "."],
             check=True
         )
+
+        result = subprocess.run(
+            ["git", "status", "--porcelain"],
+            capture_output=True,
+            text=True
+        )
+
+        # Если изменений нет
+        if not result.stdout.strip():
+
+            print("No changes for GitHub")
+            return
 
         subprocess.run(
             ["git", "commit", "-m", "update map"],
