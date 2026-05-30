@@ -38,40 +38,9 @@ const map = L.map('map').setView([57.1522, 65.5272], 12);
 L.tileLayer(
 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
 {
-    maxZoom: 25
+    maxZoom: 19
 }
 ).addTo(map);
-
-
-L.circleMarker([57.177336, 65.567923], {
-    radius: 14,
-    weight: 3,
-    fillOpacity: 0.9,
-    color: 'red'
-}).addTo(map)
-
-.bindPopup(`
-<div style="width:300px">
-
-<img 
-src="https://api.telegram.org/file/bot8952313397:AAGfOHdtt9LixHhs0odiI0oI5JUhAQpbfYY/photos/file_3.jpg"
-style="
-width:100%;
-border-radius:12px;
-margin-bottom:10px;
-"
->
-
-<b>🐕 Собаки:</b> 1<br><br>
-
-<b>⚠️ Агрессия:</b> да<br><br>
-
-<b>📝 Комментарий:</b><br>
-на улице
-
-</div>
-`);
-
 
 </script>
 
