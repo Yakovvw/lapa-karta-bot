@@ -3,6 +3,7 @@ import csv
 from aiogram.filters import StateFilter
 from datetime import datetime
 from aiogram.types import WebAppInfo
+
 from aiogram import Bot, Dispatcher, F, types
 from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
@@ -16,6 +17,7 @@ from aiogram.types import (
     FSInputFile
 )
 
+import time
 import folium
 import pandas as pd
 import subprocess
@@ -379,7 +381,7 @@ async def map_handler(message: types.Message, state: FSMContext):
     await state.clear()
 
     web_app = WebAppInfo(
-        url="https://Yakovvw.github.io/lapa-karta-bot/"
+        url=f"https://yakovvw.github.io/lapa-karta-bot/?v={int(time.time())}"
     )
 
     keyboard = ReplyKeyboardMarkup(
