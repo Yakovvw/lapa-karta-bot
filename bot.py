@@ -25,7 +25,7 @@ import subprocess
 # =========================
 # TOKEN
 # =========================
-TOKEN = "8952313397:AAFDYG-U5_G67KzG3W_XTRbQoEFxX-0qmKI"
+TOKEN = "PASTE_NEW_TOKEN"
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher(storage=MemoryStorage())
