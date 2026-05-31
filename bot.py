@@ -543,7 +543,7 @@ L.tileLayer(
         if str(row["aggression"]).lower() == "нет":
             color = "green"
 
-    markers_js += f"""
+        markers_js += f"""
 L.circleMarker([{row['lat']}, {row['lon']}], {{
     radius: 14,
     weight: 3,
@@ -554,7 +554,7 @@ L.circleMarker([{row['lat']}, {row['lon']}], {{
 .bindPopup(`
 <div style="width:300px">
 
-<img 
+<img
 src="{row['photo']}"
 style="
 width:100%;
