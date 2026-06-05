@@ -38,98 +38,9 @@ const map = L.map('map').setView([57.1522, 65.5272], 12);
 L.tileLayer(
 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
 {
-    maxZoom: 25
+    maxZoom: 19
 }
 ).addTo(map);
-
-
-L.circleMarker([57.177417, 65.567804], {
-    radius: 14,
-    weight: 3,
-    fillOpacity: 0.9,
-    color: 'green'
-}).addTo(map)
-
-.bindPopup(`
-<div style="width:300px">
-
-<img
-src="https://api.telegram.org/file/bot8952313397:AAGfOHdtt9LixHhs0odiI0oI5JUhAQpbfYY/photos/file_8.jpg"
-style="
-width:100%;
-border-radius:12px;
-margin-bottom:10px;
-"
->
-
-<b>🐕 Собаки:</b> 2<br><br>
-
-<b>⚠️ Агрессия:</b> нет<br><br>
-
-<b>📝 Комментарий:</b><br>
-есть щенок
-
-</div>
-`);
-
-L.circleMarker([57.161781, 65.515261], {
-    radius: 14,
-    weight: 3,
-    fillOpacity: 0.9,
-    color: 'green'
-}).addTo(map)
-
-.bindPopup(`
-<div style="width:300px">
-
-<img
-src="https://api.telegram.org/file/bot8952313397:AAGfOHdtt9LixHhs0odiI0oI5JUhAQpbfYY/photos/file_11.jpg"
-style="
-width:100%;
-border-radius:12px;
-margin-bottom:10px;
-"
->
-
-<b>🐕 Собаки:</b> 4<br><br>
-
-<b>⚠️ Агрессия:</b> нет<br><br>
-
-<b>📝 Комментарий:</b><br>
-Маленькие крошки
-
-</div>
-`);
-
-L.circleMarker([57.177427, 65.567847], {
-    radius: 14,
-    weight: 3,
-    fillOpacity: 0.9,
-    color: 'green'
-}).addTo(map)
-
-.bindPopup(`
-<div style="width:300px">
-
-<img
-src="https://api.telegram.org/file/bot8952313397:AAGfOHdtt9LixHhs0odiI0oI5JUhAQpbfYY/photos/file_12.jpg"
-style="
-width:100%;
-border-radius:12px;
-margin-bottom:10px;
-"
->
-
-<b>🐕 Собаки:</b> 7<br><br>
-
-<b>⚠️ Агрессия:</b> нет<br><br>
-
-<b>📝 Комментарий:</b><br>
-Fiidkxxkxk
-
-</div>
-`);
-
 
 </script>
 
